@@ -3,7 +3,7 @@ package Controladores;
 import BDD.OrdenDAO;
 import modelo.HistorialEstado;
 import modelo.Orden;
-import javafx.application.Platform;
+import javafx.application.Platform; // Asegúrate de que este import esté presente
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -15,6 +15,7 @@ import utils.WhatsApp;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import java.util.List;
 
 public class TallerController {
 
@@ -98,15 +99,19 @@ public class TallerController {
         listaOrdenesMaster = FXCollections.observableArrayList();
         listaOrdenesFiltrada = new FilteredList<>(listaOrdenesMaster, p -> true);
 
+        // Estas llamadas deben estar aquí y los métodos deben existir abajo
         configurarTabla();
         configurarFiltroBusqueda();
         poblarComboBoxes();
         enlazarEstadosBotones();
+        configurarHistorialListView();
 
         refrescarTabla();
-        Platform.runLater(this::onNuevoClick);
+        // Quitamos el Platform.runLater por si interfería
+        onNuevoClick();
     }
 
+    // MÉTODO QUE FALTABA SEGÚN EL ERROR
     private void configurarTabla() {
         this.colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         this.colNumOrden.setCellValueFactory(new PropertyValueFactory<>("numeroOrden"));
@@ -122,9 +127,25 @@ public class TallerController {
         );
     }
 
+    // MÉTODO QUE FALTABA SEGÚN EL ERROR
     private void configurarFiltroBusqueda() {
         txtBuscar.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltro());
         cmbFiltro.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltro());
+    }
+
+    private void configurarHistorialListView() {
+        listHistorial.setCellFactory(lv -> new ListCell<>() {
+            @Override
+            public void updateItem(HistorialEstado item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(item.getFecha() + ": " + item.getEstado());
+                }
+            }
+        });
     }
 
     private void aplicarFiltro() {
@@ -204,7 +225,10 @@ public class TallerController {
     }
 
     private void refrescarHistorial(int ordenId) {
-        listHistorial.setItems(FXCollections.observableArrayList(ordenDAO.getHistorialDeOrden(ordenId)));
+        List<HistorialEstado> historialData = ordenDAO.getHistorialDeOrden(ordenId);
+        // System.out.println("Historial cargado para orden ID " + ordenId + ": " + historialData.size() + " elementos");
+        ObservableList<HistorialEstado> historial = FXCollections.observableArrayList(historialData);
+        listHistorial.setItems(historial);
     }
 
     @FXML
@@ -235,6 +259,7 @@ public class TallerController {
             Notifications.create().title("Éxito").text("Orden " + ordenSeleccionada.getId() + " actualizada.").showInformation();
 
             refrescarTabla();
+            refrescarHistorial(ordenSeleccionada.getId());
         }
     }
 
@@ -284,8 +309,9 @@ public class TallerController {
         if (result.isPresent() && result.get() == ButtonType.OK) {
             ordenDAO.eliminarOrden(ordenSeleccionada.getId());
             Notifications.create().title("Éxito").text("Orden eliminada.").showInformation();
-            refrescarTabla();
+
             onNuevoClick();
+            refrescarTabla();
         }
     }
 
@@ -334,10 +360,13 @@ public class TallerController {
                     .findFirst();
 
             if (ordenParaReseleccionar.isPresent()) {
+                // Selecciona en el modelo de selección de la tabla
                 tablaOrdenes.getSelectionModel().select(ordenParaReseleccionar.get());
+                // Asegura que la fila seleccionada sea visible
                 tablaOrdenes.scrollTo(ordenParaReseleccionar.get());
             } else {
-                onNuevoClick();
+                // Si la orden ya no existe (ej. fue eliminada), limpia la selección
+                tablaOrdenes.getSelectionModel().clearSelection();
             }
         }
     }
@@ -364,7 +393,8 @@ public class TallerController {
 
     private double parseDouble(String texto) {
         try {
-            return Double.parseDouble(texto.replace(",", "."));
+            // Asegura reemplazar coma por punto y quitar espacios
+            return Double.parseDouble(texto.replace(",", ".").trim());
         } catch (NumberFormatException | NullPointerException e) {
             return 0.0;
         }

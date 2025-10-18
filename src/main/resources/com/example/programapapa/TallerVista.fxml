@@ -181,7 +181,7 @@
                         </VBox>
                         <Separator />
                         <Label styleClass="label-titulo" text="Historial de Estados" />
-                        <ListView fx:id="listHistorial" prefHeight="150.0" />
+                        <ListView fx:id="listHistorial" minHeight="100.0" prefHeight="150.0" />
                     </children>
                 </VBox>
             </content>
