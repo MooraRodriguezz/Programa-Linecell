@@ -1,0 +1,72 @@
+/* Estilo base */
+.root {
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-base: #ECEFF1;
+    -fx-background: #ECEFF1;
+}
+
+/* Títulos */
+.label-titulo {
+    -fx-font-size: 1.2em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #004D40;
+    -fx-padding: 5px 0;
+}
+
+/* Botones */
+.button {
+    -fx-background-color: #00796B;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5px;
+}
+
+.button:hover {
+    -fx-background-color: #004D40;
+}
+
+/* Botón de eliminar */
+#boton-eliminar {
+    -fx-background-color: #D32F2F;
+}
+
+#boton-eliminar:hover {
+    -fx-background-color: #B71C1C;
+}
+
+/* Botón de WhatsApp */
+#btnWhatsApp {
+    -fx-background-color: #25D366;
+}
+
+#btnWhatsApp:hover {
+    -fx-background-color: #128C7E;
+}
+
+/* Encabezado de la tabla */
+.table-view .column-header-background {
+    -fx-background-color: #B0BEC5;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: #37474F;
+    -fx-font-weight: bold;
+}
+
+/* Filas de la tabla */
+.table-row-cell:odd {
+    -fx-background-color: #FAFAFA;
+}
+.table-row-cell:even {
+    -fx-background-color: #FFFFFF;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #00796B;
+    -fx-background-insets: 0;
+    -fx-background-radius: 1;
+}
+
+.table-row-cell:selected .text {
+    -fx-fill: white;
+}
