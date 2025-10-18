@@ -13,7 +13,7 @@ module com.example.programapapa {
     opens Controladores to javafx.fxml;
     exports Controladores;
 
-    exports modelo;
+    opens modelo to javafx.base; // <-- ESTA ES LA LÍNEA CORREGIDA
     exports BDD;
     exports utils;
 }

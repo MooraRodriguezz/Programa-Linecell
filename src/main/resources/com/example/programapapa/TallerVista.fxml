@@ -30,11 +30,12 @@
                         <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                     </padding>
                     <children>
-                        <Label text="Buscar:">
+                        <Label text="Buscar por:">
                             <graphic>
                                 <FontIcon iconLiteral="fas-search" />
                             </graphic>
                         </Label>
+                        <ComboBox fx:id="cmbFiltro" prefWidth="170.0" />
                         <CustomTextField fx:id="txtBuscar" HBox.hgrow="ALWAYS" />
                     </children>
                 </HBox>
@@ -129,7 +130,6 @@
                         </GridPane>
                         <Separator />
                         <Label styleClass="label-titulo" text="Diagnóstico y Costos" />
-
                         <VBox spacing="5.0">
                             <children>
                                 <Label text="Falla Reportada:" />
@@ -144,7 +144,6 @@
                                 <TextField fx:id="txtImporteFinal" />
                             </children>
                         </VBox>
-
                         <HBox alignment="CENTER_LEFT" spacing="10.0">
                             <children>
                                 <Button fx:id="btnNuevo" onAction="#onNuevoClick" prefWidth="100.0" text="Nuevo">

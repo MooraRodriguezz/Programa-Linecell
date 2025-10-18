@@ -3,6 +3,7 @@ package Controladores;
 import BDD.OrdenDAO;
 import modelo.HistorialEstado;
 import modelo.Orden;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -36,6 +37,9 @@ public class TallerController {
 
     @FXML
     private TextField txtBuscar;
+    @FXML
+    private ComboBox<String> cmbFiltro;
+
     @FXML
     private TextField txtNumeroOrden;
     @FXML
@@ -100,7 +104,7 @@ public class TallerController {
         enlazarEstadosBotones();
 
         refrescarTabla();
-        onNuevoClick();
+        Platform.runLater(this::onNuevoClick);
     }
 
     private void configurarTabla() {
@@ -119,27 +123,45 @@ public class TallerController {
     }
 
     private void configurarFiltroBusqueda() {
-        txtBuscar.textProperty().addListener((observable, oldValue, newValue) -> {
-            listaOrdenesFiltrada.setPredicate(orden -> {
-                if (newValue == null || newValue.isEmpty()) {
+        txtBuscar.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltro());
+        cmbFiltro.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltro());
+    }
+
+    private void aplicarFiltro() {
+        String filtroSeleccionado = cmbFiltro.getValue();
+        String textoBusqueda = txtBuscar.getText();
+
+        listaOrdenesFiltrada.setPredicate(orden -> {
+            if (textoBusqueda == null || textoBusqueda.isEmpty() || filtroSeleccionado == null) {
+                return true;
+            }
+            String lowerCaseFilter = textoBusqueda.toLowerCase();
+
+            switch (filtroSeleccionado) {
+                case "Nombre o Apellido":
+                    String nombre = orden.getNombreCliente().toLowerCase();
+                    String apellido = (orden.getApellidoCliente() != null) ? orden.getApellidoCliente().toLowerCase() : "";
+                    String nombreCompleto = nombre + " " + apellido;
+
+                    return (nombre.contains(lowerCaseFilter) ||
+                            apellido.contains(lowerCaseFilter) ||
+                            nombreCompleto.contains(lowerCaseFilter));
+                case "Teléfono":
+                    return orden.getTelefono().toLowerCase().contains(lowerCaseFilter);
+                case "N° de Orden":
+                    return (orden.getNumeroOrden() != null && orden.getNumeroOrden().toLowerCase().contains(lowerCaseFilter));
+                default:
                     return true;
-                }
-                String lowerCaseFilter = newValue.toLowerCase();
-
-                if (orden.getNombreCliente().toLowerCase().contains(lowerCaseFilter)) return true;
-                if (orden.getApellidoCliente() != null && orden.getApellidoCliente().toLowerCase().contains(lowerCaseFilter)) return true;
-                if (orden.getTelefono().toLowerCase().contains(lowerCaseFilter)) return true;
-                if (orden.getNumeroOrden() != null && orden.getNumeroOrden().toLowerCase().contains(lowerCaseFilter)) return true;
-                if (orden.getModelo() != null && orden.getModelo().toLowerCase().contains(lowerCaseFilter)) return true;
-                if (orden.getMarca() != null && orden.getMarca().toLowerCase().contains(lowerCaseFilter)) return true;
-                if (orden.getNumeroSerie() != null && orden.getNumeroSerie().toLowerCase().contains(lowerCaseFilter)) return true;
-
-                return false;
-            });
+            }
         });
     }
 
     private void poblarComboBoxes() {
+        cmbFiltro.setItems(FXCollections.observableArrayList(
+                "Nombre o Apellido", "Teléfono", "N° de Orden"
+        ));
+        cmbFiltro.setValue("Nombre o Apellido");
+
         cmbEstado.setItems(FXCollections.observableArrayList(
                 "Ingresado", "Presupuestado", "Aprobado", "Reparado", "Entregado"
         ));
@@ -176,6 +198,8 @@ public class TallerController {
             txtImporteFinal.setText(String.valueOf(orden.getImporteFinal()));
 
             refrescarHistorial(orden.getId());
+        } else {
+            limpiarCampos();
         }
     }
 
@@ -196,21 +220,22 @@ public class TallerController {
 
             ordenDAO.agregarOrden(nuevaOrden);
             Notifications.create().title("Éxito").text("Nueva orden guardada.").showInformation();
+
+            refrescarTabla();
+            onNuevoClick();
         } else {
             String estadoViejo = ordenSeleccionada.getEstadoActual();
             llenarOrdenDesdeFormulario(ordenSeleccionada);
 
             ordenDAO.actualizarOrden(ordenSeleccionada);
 
-            if (!estadoViejo.equals(estadoNuevo)) {
+            if (estadoViejo != null && !estadoViejo.equals(estadoNuevo)) {
                 ordenDAO.agregarEstadoHistorial(ordenSeleccionada.getId(), estadoNuevo, fechaHoy);
-                refrescarHistorial(ordenSeleccionada.getId());
             }
             Notifications.create().title("Éxito").text("Orden " + ordenSeleccionada.getId() + " actualizada.").showInformation();
-        }
 
-        refrescarTabla();
-        onNuevoClick();
+            refrescarTabla();
+        }
     }
 
     private void llenarOrdenDesdeFormulario(Orden orden) {
@@ -293,9 +318,30 @@ public class TallerController {
     }
 
     private void refrescarTabla() {
+        int selectedId = -1;
+        if (ordenSeleccionada != null) {
+            selectedId = ordenSeleccionada.getId();
+        }
+
         listaOrdenesMaster.clear();
         listaOrdenesMaster.addAll(ordenDAO.getTodasLasOrdenes());
+
+        final int finalSelectedId = selectedId;
+
+        if (finalSelectedId != -1) {
+            Optional<Orden> ordenParaReseleccionar = listaOrdenesFiltrada.stream()
+                    .filter(o -> o.getId() == finalSelectedId)
+                    .findFirst();
+
+            if (ordenParaReseleccionar.isPresent()) {
+                tablaOrdenes.getSelectionModel().select(ordenParaReseleccionar.get());
+                tablaOrdenes.scrollTo(ordenParaReseleccionar.get());
+            } else {
+                onNuevoClick();
+            }
+        }
     }
+
 
     private void limpiarCampos() {
         txtNumeroOrden.clear();
