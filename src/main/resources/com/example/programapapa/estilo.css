@@ -70,3 +70,8 @@
 .table-row-cell:selected .text {
     -fx-fill: white;
 }
+
+/* Estilo para notas privadas */
+.text-area-privada .content {
+    -fx-background-color: #FFF9C4;
+}

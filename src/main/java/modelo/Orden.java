@@ -3,14 +3,25 @@ package modelo;
 public class Orden {
 
     private int id;
+    private String numeroOrden;
     private String nombreCliente;
     private String apellidoCliente;
     private String telefono;
-    private String equipo;
+
+    private String tipoEquipo;
+    private String marca;
+    private String modelo;
+    private String numeroSerie;
+
     private String fallaReportada;
+    private String observacionesPublicas;
+    private String observacionesPrivadas;
+
     private double presupuesto;
+    private double importeFinal;
+
     private String fechaIngreso;
-    private String estado;
+    private String estadoActual;
 
     public Orden() {
     }
@@ -21,6 +32,14 @@ public class Orden {
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public String getNumeroOrden() {
+        return numeroOrden;
+    }
+
+    public void setNumeroOrden(String numeroOrden) {
+        this.numeroOrden = numeroOrden;
     }
 
     public String getNombreCliente() {
@@ -47,12 +66,36 @@ public class Orden {
         this.telefono = telefono;
     }
 
-    public String getEquipo() {
-        return equipo;
+    public String getTipoEquipo() {
+        return tipoEquipo;
     }
 
-    public void setEquipo(String equipo) {
-        this.equipo = equipo;
+    public void setTipoEquipo(String tipoEquipo) {
+        this.tipoEquipo = tipoEquipo;
+    }
+
+    public String getMarca() {
+        return marca;
+    }
+
+    public void setMarca(String marca) {
+        this.marca = marca;
+    }
+
+    public String getModelo() {
+        return modelo;
+    }
+
+    public void setModelo(String modelo) {
+        this.modelo = modelo;
+    }
+
+    public String getNumeroSerie() {
+        return numeroSerie;
+    }
+
+    public void setNumeroSerie(String numeroSerie) {
+        this.numeroSerie = numeroSerie;
     }
 
     public String getFallaReportada() {
@@ -63,12 +106,36 @@ public class Orden {
         this.fallaReportada = fallaReportada;
     }
 
+    public String getObservacionesPublicas() {
+        return observacionesPublicas;
+    }
+
+    public void setObservacionesPublicas(String observacionesPublicas) {
+        this.observacionesPublicas = observacionesPublicas;
+    }
+
+    public String getObservacionesPrivadas() {
+        return observacionesPrivadas;
+    }
+
+    public void setObservacionesPrivadas(String observacionesPrivadas) {
+        this.observacionesPrivadas = observacionesPrivadas;
+    }
+
     public double getPresupuesto() {
         return presupuesto;
     }
 
     public void setPresupuesto(double presupuesto) {
         this.presupuesto = presupuesto;
+    }
+
+    public double getImporteFinal() {
+        return importeFinal;
+    }
+
+    public void setImporteFinal(double importeFinal) {
+        this.importeFinal = importeFinal;
     }
 
     public String getFechaIngreso() {
@@ -79,11 +146,11 @@ public class Orden {
         this.fechaIngreso = fechaIngreso;
     }
 
-    public String getEstado() {
-        return estado;
+    public String getEstadoActual() {
+        return estadoActual;
     }
 
-    public void setEstado(String estado) {
-        this.estado = estado;
+    public void setEstadoActual(String estadoActual) {
+        this.estadoActual = estadoActual;
     }
 }

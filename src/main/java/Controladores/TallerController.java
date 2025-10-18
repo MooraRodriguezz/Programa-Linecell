@@ -1,6 +1,7 @@
 package Controladores;
 
 import BDD.OrdenDAO;
+import modelo.HistorialEstado;
 import modelo.Orden;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,6 +12,7 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import org.controlsfx.control.Notifications;
 import utils.WhatsApp;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
 public class TallerController {
@@ -19,6 +21,8 @@ public class TallerController {
     private TableView<Orden> tablaOrdenes;
     @FXML
     private TableColumn<Orden, Integer> colId;
+    @FXML
+    private TableColumn<Orden, String> colNumOrden;
     @FXML
     private TableColumn<Orden, String> colNombre;
     @FXML
@@ -33,21 +37,35 @@ public class TallerController {
     @FXML
     private TextField txtBuscar;
     @FXML
+    private TextField txtNumeroOrden;
+    @FXML
+    private DatePicker dateFechaIngreso;
+    @FXML
+    private ComboBox<String> cmbEstado;
+    @FXML
     private TextField txtNombre;
     @FXML
     private TextField txtApellido;
     @FXML
     private TextField txtTelefono;
     @FXML
-    private TextField txtEquipo;
+    private ComboBox<String> cmbTipoEquipo;
     @FXML
-    private DatePicker dateFechaIngreso;
+    private TextField txtMarca;
     @FXML
-    private ComboBox<String> cmbEstado;
+    private TextField txtModelo;
+    @FXML
+    private TextField txtNumeroSerie;
+    @FXML
+    private TextArea txtFalla;
+    @FXML
+    private TextArea txtObsPublicas;
+    @FXML
+    private TextArea txtObsPrivadas;
     @FXML
     private TextField txtPresupuesto;
     @FXML
-    private TextArea txtFalla;
+    private TextField txtImporteFinal;
 
     @FXML
     private Button btnNuevo;
@@ -60,11 +78,15 @@ public class TallerController {
     private ComboBox<String> cmbPlantillasWsp;
     @FXML
     private Button btnWhatsApp;
+    @FXML
+    private ListView<HistorialEstado> listHistorial;
 
     private OrdenDAO ordenDAO;
     private ObservableList<Orden> listaOrdenesMaster;
     private FilteredList<Orden> listaOrdenesFiltrada;
     private Orden ordenSeleccionada;
+
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @FXML
     public void initialize() {
@@ -83,10 +105,11 @@ public class TallerController {
 
     private void configurarTabla() {
         this.colId.setCellValueFactory(new PropertyValueFactory<>("id"));
+        this.colNumOrden.setCellValueFactory(new PropertyValueFactory<>("numeroOrden"));
         this.colNombre.setCellValueFactory(new PropertyValueFactory<>("nombreCliente"));
         this.colTelefono.setCellValueFactory(new PropertyValueFactory<>("telefono"));
-        this.colEquipo.setCellValueFactory(new PropertyValueFactory<>("equipo"));
-        this.colEstado.setCellValueFactory(new PropertyValueFactory<>("estado"));
+        this.colEquipo.setCellValueFactory(new PropertyValueFactory<>("modelo"));
+        this.colEstado.setCellValueFactory(new PropertyValueFactory<>("estadoActual"));
         this.colFecha.setCellValueFactory(new PropertyValueFactory<>("fechaIngreso"));
 
         tablaOrdenes.setItems(listaOrdenesFiltrada);
@@ -102,17 +125,15 @@ public class TallerController {
                     return true;
                 }
                 String lowerCaseFilter = newValue.toLowerCase();
-                if (orden.getNombreCliente().toLowerCase().contains(lowerCaseFilter)) {
-                    return true;
-                } else if (orden.getApellidoCliente() != null && orden.getApellidoCliente().toLowerCase().contains(lowerCaseFilter)) {
-                    return true;
-                } else if (orden.getEquipo().toLowerCase().contains(lowerCaseFilter)) {
-                    return true;
-                } else if (orden.getTelefono().toLowerCase().contains(lowerCaseFilter)) {
-                    return true;
-                } else if (String.valueOf(orden.getId()).contains(lowerCaseFilter)) {
-                    return true;
-                }
+
+                if (orden.getNombreCliente().toLowerCase().contains(lowerCaseFilter)) return true;
+                if (orden.getApellidoCliente() != null && orden.getApellidoCliente().toLowerCase().contains(lowerCaseFilter)) return true;
+                if (orden.getTelefono().toLowerCase().contains(lowerCaseFilter)) return true;
+                if (orden.getNumeroOrden() != null && orden.getNumeroOrden().toLowerCase().contains(lowerCaseFilter)) return true;
+                if (orden.getModelo() != null && orden.getModelo().toLowerCase().contains(lowerCaseFilter)) return true;
+                if (orden.getMarca() != null && orden.getMarca().toLowerCase().contains(lowerCaseFilter)) return true;
+                if (orden.getNumeroSerie() != null && orden.getNumeroSerie().toLowerCase().contains(lowerCaseFilter)) return true;
+
                 return false;
             });
         });
@@ -120,7 +141,10 @@ public class TallerController {
 
     private void poblarComboBoxes() {
         cmbEstado.setItems(FXCollections.observableArrayList(
-                "Recibido", "Diagnosticando", "Esperando Repuesto", "Listo para Retirar", "Entregado"
+                "Ingresado", "Presupuestado", "Aprobado", "Reparado", "Entregado"
+        ));
+        cmbTipoEquipo.setItems(FXCollections.observableArrayList(
+                "Celular", "Tablet", "Notebook", "PC de Escritorio", "Otro"
         ));
         cmbPlantillasWsp.setItems(FXCollections.observableArrayList(
                 "Aviso de Presupuesto", "Aviso de Retiro", "Consulta sobre Falla"
@@ -135,38 +159,53 @@ public class TallerController {
     private void mostrarDatosOrden(Orden orden) {
         if (orden != null) {
             ordenSeleccionada = orden;
+            txtNumeroOrden.setText(orden.getNumeroOrden());
+            dateFechaIngreso.setValue(LocalDate.parse(orden.getFechaIngreso(), formatter));
+            cmbEstado.setValue(orden.getEstadoActual());
             txtNombre.setText(orden.getNombreCliente());
             txtApellido.setText(orden.getApellidoCliente());
             txtTelefono.setText(orden.getTelefono());
-            txtEquipo.setText(orden.getEquipo());
-            cmbEstado.setValue(orden.getEstado());
+            cmbTipoEquipo.setValue(orden.getTipoEquipo());
+            txtMarca.setText(orden.getMarca());
+            txtModelo.setText(orden.getModelo());
+            txtNumeroSerie.setText(orden.getNumeroSerie());
             txtFalla.setText(orden.getFallaReportada());
+            txtObsPublicas.setText(orden.getObservacionesPublicas());
+            txtObsPrivadas.setText(orden.getObservacionesPrivadas());
             txtPresupuesto.setText(String.valueOf(orden.getPresupuesto()));
-            if (orden.getFechaIngreso() != null && !orden.getFechaIngreso().isEmpty()) {
-                dateFechaIngreso.setValue(LocalDate.parse(orden.getFechaIngreso()));
-            } else {
-                dateFechaIngreso.setValue(LocalDate.now());
-            }
+            txtImporteFinal.setText(String.valueOf(orden.getImporteFinal()));
+
+            refrescarHistorial(orden.getId());
         }
+    }
+
+    private void refrescarHistorial(int ordenId) {
+        listHistorial.setItems(FXCollections.observableArrayList(ordenDAO.getHistorialDeOrden(ordenId)));
     }
 
     @FXML
     private void onGuardarClick() {
-        double presupuesto = 0.0;
-        try {
-            presupuesto = Double.parseDouble(txtPresupuesto.getText().replace(",", "."));
-        } catch (NumberFormatException e) {
-            presupuesto = 0.0;
-        }
+        String estadoNuevo = cmbEstado.getValue();
+        String fechaHoy = LocalDate.now().format(formatter);
 
         if (ordenSeleccionada == null) {
             Orden nuevaOrden = new Orden();
             llenarOrdenDesdeFormulario(nuevaOrden);
+            nuevaOrden.setFechaIngreso(fechaHoy);
+            nuevaOrden.setEstadoActual(estadoNuevo);
+
             ordenDAO.agregarOrden(nuevaOrden);
             Notifications.create().title("Éxito").text("Nueva orden guardada.").showInformation();
         } else {
+            String estadoViejo = ordenSeleccionada.getEstadoActual();
             llenarOrdenDesdeFormulario(ordenSeleccionada);
+
             ordenDAO.actualizarOrden(ordenSeleccionada);
+
+            if (!estadoViejo.equals(estadoNuevo)) {
+                ordenDAO.agregarEstadoHistorial(ordenSeleccionada.getId(), estadoNuevo, fechaHoy);
+                refrescarHistorial(ordenSeleccionada.getId());
+            }
             Notifications.create().title("Éxito").text("Orden " + ordenSeleccionada.getId() + " actualizada.").showInformation();
         }
 
@@ -175,17 +214,24 @@ public class TallerController {
     }
 
     private void llenarOrdenDesdeFormulario(Orden orden) {
+        orden.setNumeroOrden(txtNumeroOrden.getText());
         orden.setNombreCliente(txtNombre.getText());
         orden.setApellidoCliente(txtApellido.getText());
         orden.setTelefono(txtTelefono.getText());
-        orden.setEquipo(txtEquipo.getText());
+        orden.setTipoEquipo(cmbTipoEquipo.getValue());
+        orden.setMarca(txtMarca.getText());
+        orden.setModelo(txtModelo.getText());
+        orden.setNumeroSerie(txtNumeroSerie.getText());
         orden.setFallaReportada(txtFalla.getText());
-        orden.setEstado(cmbEstado.getValue());
-        orden.setPresupuesto(Double.parseDouble(txtPresupuesto.getText().isEmpty() ? "0" : txtPresupuesto.getText()));
+        orden.setObservacionesPublicas(txtObsPublicas.getText());
+        orden.setObservacionesPrivadas(txtObsPrivadas.getText());
+        orden.setPresupuesto(parseDouble(txtPresupuesto.getText()));
+        orden.setImporteFinal(parseDouble(txtImporteFinal.getText()));
+        orden.setEstadoActual(cmbEstado.getValue());
         if (dateFechaIngreso.getValue() != null) {
-            orden.setFechaIngreso(dateFechaIngreso.getValue().toString());
+            orden.setFechaIngreso(dateFechaIngreso.getValue().format(formatter));
         } else {
-            orden.setFechaIngreso(LocalDate.now().toString());
+            orden.setFechaIngreso(LocalDate.now().format(formatter));
         }
     }
 
@@ -195,7 +241,8 @@ public class TallerController {
         limpiarCampos();
         tablaOrdenes.getSelectionModel().clearSelection();
         dateFechaIngreso.setValue(LocalDate.now());
-        cmbEstado.setValue("Recibido");
+        cmbEstado.setValue("Ingresado");
+        cmbTipoEquipo.setValue(null);
         txtNombre.requestFocus();
     }
 
@@ -205,8 +252,8 @@ public class TallerController {
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Confirmar Eliminación");
-        alert.setHeaderText("Eliminar Orden N° " + ordenSeleccionada.getId());
-        alert.setContentText("¿Estás seguro que querés eliminar la orden de " + ordenSeleccionada.getNombreCliente() + "?");
+        alert.setHeaderText("Eliminar Orden N° " + ordenSeleccionada.getNumeroOrden());
+        alert.setContentText("¿Estás seguro? Esta acción no se puede deshacer y eliminará todo el historial de la orden.");
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
@@ -230,13 +277,13 @@ public class TallerController {
 
         switch (plantilla) {
             case "Aviso de Presupuesto":
-                mensaje = "¡Hola " + nombre + "! Te informamos que el presupuesto para la reparación de tu " + ordenSeleccionada.getEquipo() + " es de $" + ordenSeleccionada.getPresupuesto() + ". Esperamos tu confirmación.";
+                mensaje = "¡Hola " + nombre + "! Te informamos que el presupuesto para la reparación de tu " + ordenSeleccionada.getModelo() + " es de $" + ordenSeleccionada.getPresupuesto() + ". " + txtObsPublicas.getText();
                 break;
             case "Aviso de Retiro":
-                mensaje = "¡Hola " + nombre + "! Te avisamos que tu " + ordenSeleccionada.getEquipo() + " ya está reparado y listo para retirar.";
+                mensaje = "¡Hola " + nombre + "! Te avisamos que tu " + ordenSeleccionada.getModelo() + " ya está reparado y listo para retirar. El importe final es de $" + ordenSeleccionada.getImporteFinal() + ".";
                 break;
             case "Consulta sobre Falla":
-                mensaje = "¡Hola " + nombre + "! Necesitamos hacerte una consulta sobre la falla de tu " + ordenSeleccionada.getEquipo() + ". Por favor, comunicate con nosotros.";
+                mensaje = "¡Hola " + nombre + "! Necesitamos hacerte una consulta sobre la falla de tu " + ordenSeleccionada.getModelo() + ". " + txtObsPublicas.getText();
                 break;
             default:
                 mensaje = "¡Hola " + nombre + "!";
@@ -251,13 +298,29 @@ public class TallerController {
     }
 
     private void limpiarCampos() {
+        txtNumeroOrden.clear();
+        dateFechaIngreso.setValue(null);
+        cmbEstado.setValue(null);
         txtNombre.clear();
         txtApellido.clear();
         txtTelefono.clear();
-        txtEquipo.clear();
+        cmbTipoEquipo.setValue(null);
+        txtMarca.clear();
+        txtModelo.clear();
+        txtNumeroSerie.clear();
         txtFalla.clear();
+        txtObsPublicas.clear();
+        txtObsPrivadas.clear();
         txtPresupuesto.clear();
-        dateFechaIngreso.setValue(null);
-        cmbEstado.setValue(null);
+        txtImporteFinal.clear();
+        listHistorial.setItems(null);
+    }
+
+    private double parseDouble(String texto) {
+        try {
+            return Double.parseDouble(texto.replace(",", "."));
+        } catch (NumberFormatException | NullPointerException e) {
+            return 0.0;
+        }
     }
 }

@@ -5,6 +5,8 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -16,29 +18,35 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.layout.VBox?>
-<?import org.kordamp.ikonli.javafx.FontIcon?>
 <?import org.controlsfx.control.textfield.CustomTextField?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controladores.TallerController">
     <top>
         <VBox>
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <padding>
-                    <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-                </padding>
-                <Label text="Buscar Orden:">
-                    <graphic>
-                        <FontIcon iconLiteral="fas-search" />
-                    </graphic></Label>
-                <CustomTextField fx:id="txtBuscar" HBox.hgrow="ALWAYS" />
-            </HBox>
-            <Separator />
+            <children>
+                <HBox alignment="CENTER_LEFT" spacing="10.0">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+                    <children>
+                        <Label text="Buscar:">
+                            <graphic>
+                                <FontIcon iconLiteral="fas-search" />
+                            </graphic>
+                        </Label>
+                        <CustomTextField fx:id="txtBuscar" HBox.hgrow="ALWAYS" />
+                    </children>
+                </HBox>
+                <Separator />
+            </children>
         </VBox>
     </top>
     <center>
         <TableView fx:id="tablaOrdenes" BorderPane.alignment="CENTER">
             <columns>
                 <TableColumn fx:id="colId" prefWidth="50.0" text="ID" />
+                <TableColumn fx:id="colNumOrden" prefWidth="70.0" text="N° Orden" />
                 <TableColumn fx:id="colNombre" prefWidth="150.0" text="Cliente" />
                 <TableColumn fx:id="colTelefono" prefWidth="120.0" text="Teléfono" />
                 <TableColumn fx:id="colEquipo" prefWidth="150.0" text="Equipo" />
@@ -54,65 +62,130 @@
         </TableView>
     </center>
     <right>
-        <VBox prefWidth="400.0" spacing="10.0" BorderPane.alignment="CENTER">
-            <padding>
-                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-            </padding>
-            <Label styleClass="label-titulo" text="Detalle de la Orden" />
-            <GridPane hgap="10.0" vgap="10.0">
-                <columnConstraints>
-                    <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="100.0" />
-                    <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
-                </columnConstraints>
+        <ScrollPane fitToHeight="true" fitToWidth="true" prefWidth="450.0">
+            <content>
+                <VBox spacing="10.0">
+                    <padding>
+                        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                    </padding>
+                    <children>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <Label styleClass="label-titulo" text="Detalle de la Orden" />
+                                <HBox HBox.hgrow="ALWAYS" />
+                                <Label text="N° Orden:" />
+                                <TextField fx:id="txtNumeroOrden" prefWidth="100.0" />
+                            </children>
+                        </HBox>
+                        <GridPane hgap="10.0" vgap="10.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="120.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                            </columnConstraints>
+                            <rowConstraints>
+                                <RowConstraints />
+                                <RowConstraints />
+                            </rowConstraints>
+                            <children>
+                                <Label text="Fecha Ingreso:" />
+                                <DatePicker fx:id="dateFechaIngreso" prefWidth="400.0" GridPane.columnIndex="1" />
+                                <Label text="Estado Actual:" GridPane.rowIndex="1" />
+                                <ComboBox fx:id="cmbEstado" prefWidth="400.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                            </children>
+                        </GridPane>
+                        <Separator />
+                        <Label styleClass="label-titulo" text="Datos del Cliente" />
+                        <GridPane hgap="10.0" vgap="10.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="120.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                            </columnConstraints>
+                            <children>
+                                <Label text="Nombre:" />
+                                <TextField fx:id="txtNombre" GridPane.columnIndex="1" />
+                                <Label text="Apellido:" GridPane.rowIndex="1" />
+                                <TextField fx:id="txtApellido" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label text="Teléfono:" GridPane.rowIndex="2" />
+                                <TextField fx:id="txtTelefono" promptText="Ej: 549223..." GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                            </children>
+                        </GridPane>
+                        <Separator />
+                        <Label styleClass="label-titulo" text="Datos del Equipo" />
+                        <GridPane hgap="10.0" vgap="10.0">
+                            <columnConstraints>
+                                <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="120.0" />
+                                <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+                            </columnConstraints>
+                            <children>
+                                <Label text="Tipo de Equipo:" />
+                                <ComboBox fx:id="cmbTipoEquipo" prefWidth="400.0" GridPane.columnIndex="1" />
+                                <Label text="Marca:" GridPane.rowIndex="1" />
+                                <TextField fx:id="txtMarca" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                <Label text="Modelo:" GridPane.rowIndex="2" />
+                                <TextField fx:id="txtModelo" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                <Label text="N° Serie / IMEI:" GridPane.rowIndex="3" />
+                                <TextField fx:id="txtNumeroSerie" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                            </children>
+                        </GridPane>
+                        <Separator />
+                        <Label styleClass="label-titulo" text="Diagnóstico y Costos" />
 
-                <Label text="Nombre:" GridPane.rowIndex="0" />
-                <TextField fx:id="txtNombre" GridPane.columnIndex="1" GridPane.rowIndex="0" />
-                <Label text="Apellido:" GridPane.rowIndex="1" />
-                <TextField fx:id="txtApellido" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                <Label text="Teléfono:" GridPane.rowIndex="2" />
-                <TextField fx:id="txtTelefono" promptText="Ej: 549223..." GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                <Label text="Equipo:" GridPane.rowIndex="3" />
-                <TextField fx:id="txtEquipo" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                <Label text="Fecha Ingreso:" GridPane.rowIndex="4" />
-                <DatePicker fx:id="dateFechaIngreso" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                <Label text="Estado:" GridPane.rowIndex="5" />
-                <ComboBox fx:id="cmbEstado" prefWidth="300.0" GridPane.columnIndex="1" GridPane.rowIndex="5" />
-                <Label text="Presupuesto:" GridPane.rowIndex="6" />
-                <TextField fx:id="txtPresupuesto" GridPane.columnIndex="1" GridPane.rowIndex="6" />
-                <Label text="Falla Reportada:" GridPane.rowIndex="7" />
-                <TextArea fx:id="txtFalla" prefHeight="100.0" prefWidth="200.0" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="7" />
-            </GridPane>
+                        <VBox spacing="5.0">
+                            <children>
+                                <Label text="Falla Reportada:" />
+                                <TextArea fx:id="txtFalla" prefHeight="80.0" wrapText="true" />
+                                <Label text="Observaciones Públicas (visible para el cliente):" />
+                                <TextArea fx:id="txtObsPublicas" prefHeight="80.0" wrapText="true" />
+                                <Label text="Observaciones Privadas (uso interno):" />
+                                <TextArea fx:id="txtObsPrivadas" prefHeight="80.0" styleClass="text-area-privada" wrapText="true" />
+                                <Label text="Presupuesto $:" />
+                                <TextField fx:id="txtPresupuesto" />
+                                <Label text="Importe Final $:" />
+                                <TextField fx:id="txtImporteFinal" />
+                            </children>
+                        </VBox>
 
-            <HBox alignment="CENTER_LEFT" spacing="10.0">
-                <Button fx:id="btnNuevo" onAction="#onNuevoClick" prefWidth="100.0" text="Nuevo">
-                    <graphic>
-                        <FontIcon iconLiteral="fas-plus" />
-                    </graphic>
-                </Button>
-                <Button fx:id="btnGuardar" onAction="#onGuardarClick" prefWidth="100.0" text="Guardar">
-                    <graphic>
-                        <FontIcon iconLiteral="fas-save" />
-                    </graphic>
-                </Button>
-                <Button fx:id="btnEliminar" id="boton-eliminar" onAction="#onEliminarClick" prefWidth="100.0" text="Eliminar">
-                    <graphic>
-                        <FontIcon iconLiteral="fas-trash" />
-                    </graphic>
-                </Button>
-            </HBox>
-
-            <Separator />
-
-            <Label styleClass="label-titulo" text="Panel de Comunicación" />
-            <VBox spacing="10.0">
-                <Label text="Plantillas de WhatsApp:" />
-                <ComboBox fx:id="cmbPlantillasWsp" prefWidth="400.0" />
-                <Button fx:id="btnWhatsApp" onAction="#onWhatsAppClick" prefWidth="400.0" text="Enviar Mensaje de WhatsApp">
-                    <graphic>
-                        <FontIcon iconLiteral="fab-whatsapp" />
-                    </graphic>
-                </Button>
-            </VBox>
-        </VBox>
+                        <HBox alignment="CENTER_LEFT" spacing="10.0">
+                            <children>
+                                <Button fx:id="btnNuevo" onAction="#onNuevoClick" prefWidth="100.0" text="Nuevo">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fas-plus" />
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="btnGuardar" onAction="#onGuardarClick" prefWidth="100.0" text="Guardar">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fas-save" />
+                                    </graphic>
+                                </Button>
+                                <Button fx:id="btnEliminar" id="boton-eliminar" onAction="#onEliminarClick" prefWidth="100.0" text="Eliminar">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fas-trash" />
+                                    </graphic>
+                                </Button>
+                            </children>
+                            <padding>
+                                <Insets top="10.0" />
+                            </padding>
+                        </HBox>
+                        <Separator />
+                        <Label styleClass="label-titulo" text="Comunicación" />
+                        <VBox spacing="10.0">
+                            <children>
+                                <Label text="Plantillas de WhatsApp:" />
+                                <ComboBox fx:id="cmbPlantillasWsp" prefWidth="400.0" />
+                                <Button fx:id="btnWhatsApp" onAction="#onWhatsAppClick" prefWidth="400.0" text="Enviar Mensaje de WhatsApp">
+                                    <graphic>
+                                        <FontIcon iconLiteral="fab-whatsapp" />
+                                    </graphic>
+                                </Button>
+                            </children>
+                        </VBox>
+                        <Separator />
+                        <Label styleClass="label-titulo" text="Historial de Estados" />
+                        <ListView fx:id="listHistorial" prefHeight="150.0" />
+                    </children>
+                </VBox>
+            </content>
+        </ScrollPane>
     </right>
 </BorderPane>
