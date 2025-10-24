@@ -3,17 +3,15 @@ package BDD;
 import modelo.HistorialEstado;
 import modelo.Orden;
 import java.sql.*;
-import java.time.LocalDate; // Importar LocalDate
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.math.BigDecimal; // Importar BigDecimal para DECIMAL
+import java.math.BigDecimal; // <-- IMPORTANTE
 
 public class OrdenDAO {
 
-    // Ya no necesitamos las sentencias CREATE TABLE aquí
-
     public void inicializarBaseDeDatos() {
-        // Este método ahora puede estar vacío o solo verificar la conexión si querés
+        // (Este método se mantiene igual, no hace falta cambiarlo)
         try (Connection conn = ConexionDB.conectar()) {
             if (conn != null) {
                 System.out.println("Conexión a la base de datos verificada.");
@@ -51,8 +49,11 @@ public class OrdenDAO {
             pstmtOrden.setString(9, orden.getFallaReportada());
             pstmtOrden.setString(10, orden.getObservacionesPublicas());
             pstmtOrden.setString(11, orden.getObservacionesPrivadas());
-            pstmtOrden.setBigDecimal(12, BigDecimal.valueOf(orden.getPresupuesto())); // Usar BigDecimal
-            pstmtOrden.setBigDecimal(13, BigDecimal.valueOf(orden.getImporteFinal())); // Usar BigDecimal
+
+            // CAMBIADO: Se pasa BigDecimal directamente
+            pstmtOrden.setBigDecimal(12, orden.getPresupuesto());
+            pstmtOrden.setBigDecimal(13, orden.getImporteFinal());
+
             // Convertir fecha String a java.sql.Date
             pstmtOrden.setDate(14, Date.valueOf(LocalDate.parse(orden.getFechaIngreso())));
             pstmtOrden.setString(15, orden.getEstadoActual());
@@ -66,12 +67,12 @@ public class OrdenDAO {
             generatedKeys = pstmtOrden.getGeneratedKeys();
             if (generatedKeys.next()) {
                 int ordenId = generatedKeys.getInt(1);
-                orden.setId(ordenId); // Actualizamos el ID en el objeto por si acaso
+                orden.setId(ordenId);
 
                 pstmtEstado = conn.prepareStatement(sqlEstado);
                 pstmtEstado.setInt(1, ordenId);
                 pstmtEstado.setString(2, orden.getEstadoActual());
-                pstmtEstado.setDate(3, Date.valueOf(LocalDate.parse(orden.getFechaIngreso()))); // Usar Date
+                pstmtEstado.setDate(3, Date.valueOf(LocalDate.parse(orden.getFechaIngreso())));
                 pstmtEstado.executeUpdate();
             } else {
                 throw new SQLException("La inserción de la orden falló, no se obtuvo ID.");
@@ -88,7 +89,6 @@ public class OrdenDAO {
                 System.err.println("Error en rollback: " + ex.getMessage());
             }
         } finally {
-            // Cerrar recursos en orden inverso
             try { if (generatedKeys != null) generatedKeys.close(); } catch (SQLException e) { e.printStackTrace(); }
             try { if (pstmtEstado != null) pstmtEstado.close(); } catch (SQLException e) { e.printStackTrace(); }
             try { if (pstmtOrden != null) pstmtOrden.close(); } catch (SQLException e) { e.printStackTrace(); }
@@ -115,9 +115,12 @@ public class OrdenDAO {
             pstmt.setString(9, orden.getFallaReportada());
             pstmt.setString(10, orden.getObservacionesPublicas());
             pstmt.setString(11, orden.getObservacionesPrivadas());
-            pstmt.setBigDecimal(12, BigDecimal.valueOf(orden.getPresupuesto())); // Usar BigDecimal
-            pstmt.setBigDecimal(13, BigDecimal.valueOf(orden.getImporteFinal())); // Usar BigDecimal
-            pstmt.setDate(14, Date.valueOf(LocalDate.parse(orden.getFechaIngreso()))); // Usar Date
+
+            // CAMBIADO: Se pasa BigDecimal directamente
+            pstmt.setBigDecimal(12, orden.getPresupuesto());
+            pstmt.setBigDecimal(13, orden.getImporteFinal());
+
+            pstmt.setDate(14, Date.valueOf(LocalDate.parse(orden.getFechaIngreso())));
             pstmt.setString(15, orden.getEstadoActual());
             pstmt.setInt(16, orden.getId());
             pstmt.executeUpdate();
@@ -135,7 +138,7 @@ public class OrdenDAO {
             if (conn == null) throw new SQLException("No se pudo conectar a la base de datos.");
             pstmt.setInt(1, ordenId);
             pstmt.setString(2, estado);
-            pstmt.setDate(3, Date.valueOf(LocalDate.parse(fecha))); // Usar Date
+            pstmt.setDate(3, Date.valueOf(LocalDate.parse(fecha)));
             pstmt.executeUpdate();
         } catch (SQLException e) {
             System.err.println("Error al agregar estado: " + e.getMessage());
@@ -145,7 +148,7 @@ public class OrdenDAO {
 
     public List<HistorialEstado> getHistorialDeOrden(int ordenId) {
         List<HistorialEstado> historial = new ArrayList<>();
-        String sql = "SELECT * FROM HistorialEstados WHERE orden_id = ? ORDER BY fecha ASC, id ASC"; // Ordenar también por ID por si hay varios en un día
+        String sql = "SELECT * FROM HistorialEstados WHERE orden_id = ? ORDER BY fecha ASC, id ASC";
 
         try (Connection conn = ConexionDB.conectar();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -153,7 +156,6 @@ public class OrdenDAO {
             pstmt.setInt(1, ordenId);
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
-                // Convertir java.sql.Date a String con el formato deseado
                 Date dbDate = rs.getDate("fecha");
                 String fechaFormateada = (dbDate != null) ? dbDate.toLocalDate().toString() : "Fecha inválida";
                 historial.add(new HistorialEstado(rs.getString("estado"), fechaFormateada));
@@ -189,9 +191,11 @@ public class OrdenDAO {
                 orden.setFallaReportada(rs.getString("fallaReportada"));
                 orden.setObservacionesPublicas(rs.getString("observacionesPublicas"));
                 orden.setObservacionesPrivadas(rs.getString("observacionesPrivadas"));
-                orden.setPresupuesto(rs.getBigDecimal("presupuesto").doubleValue()); // Leer BigDecimal
-                orden.setImporteFinal(rs.getBigDecimal("importeFinal").doubleValue()); // Leer BigDecimal
-                // Convertir java.sql.Date a String
+
+                // CAMBIADO: Se lee BigDecimal directamente
+                orden.setPresupuesto(rs.getBigDecimal("presupuesto"));
+                orden.setImporteFinal(rs.getBigDecimal("importeFinal"));
+
                 Date dbDate = rs.getDate("fechaIngreso");
                 orden.setFechaIngreso((dbDate != null) ? dbDate.toLocalDate().toString() : "");
                 orden.setEstadoActual(rs.getString("estadoActual"));

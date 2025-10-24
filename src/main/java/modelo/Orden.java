@@ -1,5 +1,7 @@
 package modelo;
 
+import java.math.BigDecimal; // <-- IMPORTANTE
+
 public class Orden {
 
     private int id;
@@ -17,14 +19,21 @@ public class Orden {
     private String observacionesPublicas;
     private String observacionesPrivadas;
 
-    private double presupuesto;
-    private double importeFinal;
+    // CAMBIADO de double a BigDecimal
+    private BigDecimal presupuesto;
+    private BigDecimal importeFinal;
 
     private String fechaIngreso;
     private String estadoActual;
 
     public Orden() {
+        // Inicializamos los valores para evitar errores
+        this.presupuesto = BigDecimal.ZERO;
+        this.importeFinal = BigDecimal.ZERO;
     }
+
+    // --- GETTERS Y SETTERS ---
+    // (El resto es igual)
 
     public int getId() {
         return id;
@@ -122,21 +131,25 @@ public class Orden {
         this.observacionesPrivadas = observacionesPrivadas;
     }
 
-    public double getPresupuesto() {
+    // --- GETTERS Y SETTERS CAMBIADOS ---
+
+    public BigDecimal getPresupuesto() {
         return presupuesto;
     }
 
-    public void setPresupuesto(double presupuesto) {
+    public void setPresupuesto(BigDecimal presupuesto) {
         this.presupuesto = presupuesto;
     }
 
-    public double getImporteFinal() {
+    public BigDecimal getImporteFinal() {
         return importeFinal;
     }
 
-    public void setImporteFinal(double importeFinal) {
+    public void setImporteFinal(BigDecimal importeFinal) {
         this.importeFinal = importeFinal;
     }
+
+    // --- FIN DE GETTERS Y SETTERS CAMBIADOS ---
 
     public String getFechaIngreso() {
         return fechaIngreso;

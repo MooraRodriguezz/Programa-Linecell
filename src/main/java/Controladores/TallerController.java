@@ -3,7 +3,6 @@ package Controladores;
 import BDD.OrdenDAO;
 import modelo.HistorialEstado;
 import modelo.Orden;
-import javafx.application.Platform; // Asegúrate de que este import esté presente
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -12,6 +11,8 @@ import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import org.controlsfx.control.Notifications;
 import utils.WhatsApp;
+
+import java.math.BigDecimal; // <-- IMPORTANTE
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
@@ -99,7 +100,6 @@ public class TallerController {
         listaOrdenesMaster = FXCollections.observableArrayList();
         listaOrdenesFiltrada = new FilteredList<>(listaOrdenesMaster, p -> true);
 
-        // Estas llamadas deben estar aquí y los métodos deben existir abajo
         configurarTabla();
         configurarFiltroBusqueda();
         poblarComboBoxes();
@@ -107,11 +107,9 @@ public class TallerController {
         configurarHistorialListView();
 
         refrescarTabla();
-        // Quitamos el Platform.runLater por si interfería
         onNuevoClick();
     }
 
-    // MÉTODO QUE FALTABA SEGÚN EL ERROR
     private void configurarTabla() {
         this.colId.setCellValueFactory(new PropertyValueFactory<>("id"));
         this.colNumOrden.setCellValueFactory(new PropertyValueFactory<>("numeroOrden"));
@@ -127,7 +125,6 @@ public class TallerController {
         );
     }
 
-    // MÉTODO QUE FALTABA SEGÚN EL ERROR
     private void configurarFiltroBusqueda() {
         txtBuscar.textProperty().addListener((obs, oldVal, newVal) -> aplicarFiltro());
         cmbFiltro.valueProperty().addListener((obs, oldVal, newVal) -> aplicarFiltro());
@@ -215,8 +212,10 @@ public class TallerController {
             txtFalla.setText(orden.getFallaReportada());
             txtObsPublicas.setText(orden.getObservacionesPublicas());
             txtObsPrivadas.setText(orden.getObservacionesPrivadas());
-            txtPresupuesto.setText(String.valueOf(orden.getPresupuesto()));
-            txtImporteFinal.setText(String.valueOf(orden.getImporteFinal()));
+
+            // CAMBIADO: Muestra BigDecimal (y muestra vacío si es 0)
+            txtPresupuesto.setText(orden.getPresupuesto().compareTo(BigDecimal.ZERO) == 0 ? "" : orden.getPresupuesto().toString());
+            txtImporteFinal.setText(orden.getImporteFinal().compareTo(BigDecimal.ZERO) == 0 ? "" : orden.getImporteFinal().toString());
 
             refrescarHistorial(orden.getId());
         } else {
@@ -226,27 +225,42 @@ public class TallerController {
 
     private void refrescarHistorial(int ordenId) {
         List<HistorialEstado> historialData = ordenDAO.getHistorialDeOrden(ordenId);
-        // System.out.println("Historial cargado para orden ID " + ordenId + ": " + historialData.size() + " elementos");
         ObservableList<HistorialEstado> historial = FXCollections.observableArrayList(historialData);
         listHistorial.setItems(historial);
     }
 
     @FXML
     private void onGuardarClick() {
+        // VALIDACIÓN AÑADIDA
+        if (txtNombre.getText() == null || txtNombre.getText().trim().isEmpty()) {
+            Notifications.create().title("Error").text("El campo 'Nombre' no puede estar vacío.").showError();
+            return;
+        }
+        if (txtTelefono.getText() == null || txtTelefono.getText().trim().isEmpty()) {
+            Notifications.create().title("Error").text("El campo 'Teléfono' no puede estar vacío.").showError();
+            return;
+        }
+
         String estadoNuevo = cmbEstado.getValue();
         String fechaHoy = LocalDate.now().format(formatter);
 
         if (ordenSeleccionada == null) {
             Orden nuevaOrden = new Orden();
             llenarOrdenDesdeFormulario(nuevaOrden);
-            nuevaOrden.setFechaIngreso(fechaHoy);
+            nuevaOrden.setFechaIngreso(fechaHoy); // Se pisa la fecha por las dudas
             nuevaOrden.setEstadoActual(estadoNuevo);
 
             ordenDAO.agregarOrden(nuevaOrden);
             Notifications.create().title("Éxito").text("Nueva orden guardada.").showInformation();
 
             refrescarTabla();
-            onNuevoClick();
+
+            // Seleccionamos la orden recién creada
+            Optional<Orden> ordenRecienCreada = listaOrdenesMaster.stream()
+                    .filter(o -> o.getNumeroOrden() != null && o.getNumeroOrden().equals(nuevaOrden.getNumeroOrden()))
+                    .findFirst();
+            ordenRecienCreada.ifPresent(orden -> tablaOrdenes.getSelectionModel().select(orden));
+
         } else {
             String estadoViejo = ordenSeleccionada.getEstadoActual();
             llenarOrdenDesdeFormulario(ordenSeleccionada);
@@ -275,9 +289,13 @@ public class TallerController {
         orden.setFallaReportada(txtFalla.getText());
         orden.setObservacionesPublicas(txtObsPublicas.getText());
         orden.setObservacionesPrivadas(txtObsPrivadas.getText());
-        orden.setPresupuesto(parseDouble(txtPresupuesto.getText()));
-        orden.setImporteFinal(parseDouble(txtImporteFinal.getText()));
+
+        // CAMBIADO: Usa la nueva función parseBigDecimal
+        orden.setPresupuesto(parseBigDecimal(txtPresupuesto.getText()));
+        orden.setImporteFinal(parseBigDecimal(txtImporteFinal.getText()));
+
         orden.setEstadoActual(cmbEstado.getValue());
+
         if (dateFechaIngreso.getValue() != null) {
             orden.setFechaIngreso(dateFechaIngreso.getValue().format(formatter));
         } else {
@@ -292,7 +310,7 @@ public class TallerController {
         tablaOrdenes.getSelectionModel().clearSelection();
         dateFechaIngreso.setValue(LocalDate.now());
         cmbEstado.setValue("Ingresado");
-        cmbTipoEquipo.setValue(null);
+        cmbTipoEquipo.setValue("Celular"); // Valor por defecto
         txtNombre.requestFocus();
     }
 
@@ -351,6 +369,7 @@ public class TallerController {
 
         listaOrdenesMaster.clear();
         listaOrdenesMaster.addAll(ordenDAO.getTodasLasOrdenes());
+        tablaOrdenes.sort(); // Vuelve a ordenar la tabla
 
         final int finalSelectedId = selectedId;
 
@@ -360,12 +379,9 @@ public class TallerController {
                     .findFirst();
 
             if (ordenParaReseleccionar.isPresent()) {
-                // Selecciona en el modelo de selección de la tabla
                 tablaOrdenes.getSelectionModel().select(ordenParaReseleccionar.get());
-                // Asegura que la fila seleccionada sea visible
                 tablaOrdenes.scrollTo(ordenParaReseleccionar.get());
             } else {
-                // Si la orden ya no existe (ej. fue eliminada), limpia la selección
                 tablaOrdenes.getSelectionModel().clearSelection();
             }
         }
@@ -391,12 +407,18 @@ public class TallerController {
         listHistorial.setItems(null);
     }
 
-    private double parseDouble(String texto) {
+    // CAMBIADO: De parseDouble a parseBigDecimal
+    private BigDecimal parseBigDecimal(String texto) {
+        if (texto == null || texto.trim().isEmpty()) {
+            return BigDecimal.ZERO; // Devuelve 0 si está vacío
+        }
         try {
-            // Asegura reemplazar coma por punto y quitar espacios
-            return Double.parseDouble(texto.replace(",", ".").trim());
-        } catch (NumberFormatException | NullPointerException e) {
-            return 0.0;
+            // Reemplaza coma por punto y quita espacios
+            String textoLimpio = texto.replace(",", ".").trim();
+            return new BigDecimal(textoLimpio);
+        } catch (NumberFormatException e) {
+            // Si el usuario escribe "abc", lo toma como 0
+            return BigDecimal.ZERO;
         }
     }
 }

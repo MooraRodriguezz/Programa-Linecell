@@ -6,6 +6,7 @@ module com.example.programapapa {
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.ikonli.fontawesome5;
     requires java.desktop;
+    requires org.mariadb.jdbc;
 
     opens com.example.programapapa to javafx.fxml;
     exports com.example.programapapa;

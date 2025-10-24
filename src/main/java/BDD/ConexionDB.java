@@ -7,11 +7,20 @@ import java.sql.SQLException;
 public class ConexionDB {
 
     // --- ¡CONFIGURACIÓN IMPORTANTE! ---
-    private static final String IP_SERVIDOR = "TU_IP_SERVIDOR"; // Reemplazar por la IP de la PC donde instalaste MariaDB
-    private static final String PUERTO = "3306"; // Puerto por defecto de MariaDB
-    private static final String NOMBRE_BASE_DATOS = "taller_db"; // El nombre que le pusiste
-    private static final String USUARIO = "usuario_taller"; // El usuario que creaste
-    private static final String CONTRASENA = "TU_CONTRASENA"; // La contraseña de usuario_taller
+    // IP_SERVIDOR: "localhost" si está en la misma PC
+    private static final String IP_SERVIDOR = "localhost";
+
+    // PUERTO: El que usaste al instalar. ¡OJO! Probablemente sea "3307" si "3306" estaba ocupado
+    private static final String PUERTO = "3307";
+
+    // NOMBRE_BASE_DATOS: El que creamos
+    private static final String NOMBRE_BASE_DATOS = "taller_celulares";
+
+    // USUARIO: El que creamos para la app
+    private static final String USUARIO = "app_java";
+
+    // CONTRASENA: La que le pusimos a ese usuario
+    private static final String CONTRASENA = "pass123";
     // --- FIN CONFIGURACIÓN ---
 
     private static final String URL = "jdbc:mariadb://" + IP_SERVIDOR + ":" + PUERTO + "/" + NOMBRE_BASE_DATOS;
@@ -19,7 +28,7 @@ public class ConexionDB {
     public static Connection conectar() {
         Connection conn = null;
         try {
-            // Asegúrate de que el driver esté cargado (aunque con Maven suele ser automático)
+            // Esto ya está en tu pom.xml, así que va a funcionar
             Class.forName("org.mariadb.jdbc.Driver");
 
             conn = DriverManager.getConnection(URL, USUARIO, CONTRASENA);
